@@ -6,7 +6,7 @@ coverage
 .vscode
 .env
 tmp
-
+.history
 
 # Quasar core related directories
 .quasar
