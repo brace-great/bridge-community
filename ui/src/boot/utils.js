@@ -10,9 +10,13 @@ let putUtils;
 let patchUtils;
 let refreshToken;
 export default boot(({ redirect }) => {
-  authValid = async (data) => {
-    if (!data) {
+  authValid = async (data, raw) => {
+    if (!(data instanceof Error)) return data;
+    // console.log("data", data.request);
+
+    if (data.response.status === 401) {
       const res = await refreshToken();
+
       if (!res) {
         alert("登陆已过期");
         LocalStorage.remove("access");
@@ -21,11 +25,16 @@ export default boot(({ redirect }) => {
           path: "/auth",
         });
         return null;
+      } else {
+        return postUtils(data.request.responseURL, raw, true);
       }
     }
-    return data;
   };
-  getUtils = async (url, restricted) => {
+  getUtils = async (url, restricted, data) => {
+    if (data) {
+      const res = await get(url, restricted, data);
+      return authValid(res);
+    }
     const res = await get(url, restricted);
     return authValid(res);
   };
@@ -33,10 +42,10 @@ export default boot(({ redirect }) => {
     if (restricted) {
       let access = LocalStorage.getItem("access");
       const res = await post(url, data, access);
-      return authValid(res);
+      return authValid(res, data);
     }
     const res = await post(url, data);
-    return authValid(res);
+    return authValid(res, data);
   };
   putUtils = async (url, data) => {
     let access = LocalStorage.getItem("access");
@@ -61,6 +70,8 @@ export default boot(({ redirect }) => {
       { refresh: refresh },
       refresh
     );
+
+    if (!refreshRes.data) return false;
     LocalStorage.set("access", refreshRes.data.access);
     LocalStorage.set("refresh", refreshRes.data.refresh);
     return refreshRes;
