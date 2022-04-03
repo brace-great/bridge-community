@@ -55,6 +55,10 @@ const routes = [
         path: ":username/chat",
         component: () => import("pages/UserChat.vue"),
       },
+      {
+        path: ":username/newdiscuss",
+        component: () => import("pages/NewDiscuss.vue"),
+      },
     ],
     beforeEnter: (to, from, next) => {
       // authkey 存在 进入该路由，不存在跳转到登陆页面

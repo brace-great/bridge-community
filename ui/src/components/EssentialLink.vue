@@ -1,5 +1,5 @@
 <template>
-  <q-item clickable tag="a" target="_self" :href="link">
+  <q-item clickable tag="a" target="_self" :to="link">
     <q-item-section v-if="icon" avatar>
       <q-icon :name="icon" />
     </q-item-section>
@@ -49,7 +49,7 @@ export default defineComponent({
       default: "",
     },
     badge: {
-      type: Number,
+      type: [Number, null, Object],
       default: null,
     },
   },

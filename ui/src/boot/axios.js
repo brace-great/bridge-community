@@ -12,22 +12,35 @@ import { refreshToken } from "./utils";
 // "export default () => {}" function below (which runs individually
 // for each client)
 // const api = axios.create({ baseURL: "https://api.example.com" });
-const get = async (url, restricted = false) => {
+const get = async (url, restricted = false, data) => {
   if (restricted == true) {
     try {
       let access = LocalStorage.getItem("access");
-      let res = await axios.get(url, {
-        // params: data.data,
-        headers: { Authorization: "JWT " + access },
-      });
-
-      return res;
+      if (data) {
+        let res = await axios.get(url, {
+          params: data,
+          headers: { Authorization: "JWT " + access },
+        });
+        return res;
+      } else {
+        let res = await axios.get(url, {
+          headers: { Authorization: "JWT " + access },
+        });
+        return res;
+      }
     } catch (err) {
       if (err.response.status !== 401) {
         return err.response;
       }
       try {
-        refreshToken();
+        const res = await refreshToken();
+        if (!res) {
+          alert("登陆已过期");
+          LocalStorage.remove("access");
+          LocalStorage.remove("refresh");
+          useRouter().push("/auth");
+          return null;
+        }
       } catch (err) {
         return null;
       }

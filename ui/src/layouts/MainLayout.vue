@@ -1,5 +1,5 @@
 <template>
-  <q-layout view="hHh Lpr lFf">
+  <q-layout view="hHh LpR lFf">
     <q-header elevated>
       <q-toolbar>
         <q-btn
@@ -13,6 +13,12 @@
 
         <q-toolbar-title class="row justify-between">
           <q-btn flat label="Bridge" to="/" />
+          <q-btn
+            flat
+            label="发布新讨论"
+            :to="'/user/' + store.user.username + '/newdiscuss'"
+            style="margin-left: 50px"
+          />
           <q-input
             style="margin: auto"
             dark
@@ -33,7 +39,6 @@
             </template>
           </q-input>
         </q-toolbar-title>
-        <!-- <q-btn icon="item" @click="trigger"> </q-btn> -->
         <q-btn
           v-if="access"
           flat
@@ -57,7 +62,7 @@
     </q-header>
 
     <q-drawer
-      width="200"
+      :width="width"
       class=""
       v-model="leftDrawerOpen"
       show-if-above
@@ -101,6 +106,10 @@ export default defineComponent({
 
     const chatBadge = ref(null);
     const store = useStore();
+    const linkusername = ref("");
+    if (user) {
+      linkusername.value = user.username;
+    }
     if (access.value) {
       get(process.env.API + "wu/chatmessage/", true).then((res) => {
         let chat = res.data.results;
@@ -155,21 +164,21 @@ export default defineComponent({
       },
       {
         title: "通知",
-        link: "user/" + LocalStorage.getItem("user").username + "/notify/",
+        link: "/user/" + linkusername.value + "/notify/",
         badge: ref(1),
       },
       {
         title: "私信",
-        link: "user/" + LocalStorage.getItem("user").username + "/chat/",
+        link: "/user/" + linkusername.value + "/chat/",
         badge: chatBadge,
       },
       {
         title: "个人动态",
-        link: "user/" + LocalStorage.getItem("user").username,
+        link: "/user/" + linkusername.value,
       },
       {
         title: "设置",
-        link: "user/" + LocalStorage.getItem("user").username + "/settings/",
+        link: "/user/" + linkusername.value + "/settings/",
       },
     ];
     const bar = ref(null);
@@ -178,6 +187,8 @@ export default defineComponent({
     // don't skip Ajax calls hijacking)
 
     return {
+      width: ref(200),
+      store,
       bar,
       text: ref(""),
       access,
