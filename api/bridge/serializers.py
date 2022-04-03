@@ -4,6 +4,43 @@ from django.contrib.auth.hashers import make_password
 from .models import *
 
 
+class DynamicSerializer(serializers.HyperlinkedModelSerializer):
+    class Meta:
+        model = Dynamic
+        fields = ['id',
+                  'time',
+                  'username',
+                  'discuss',
+                  'comment ', ]
+
+
+class CommentSerializerAlter(serializers.ModelSerializer):
+
+    class Meta:
+        model = Comment
+        fields = ['id', 'notshow',
+                  'replyto', 'discuss', 'text', 'commenter', 'time']
+
+
+class CommentSerializer(serializers.ModelSerializer):
+    replyto = serializers.StringRelatedField()
+
+    class Meta:
+        model = Comment
+        fields = ['id', 'notshow',
+                  'replyto', 'discuss', 'text', 'commenter', 'time']
+
+
+class DiscussSerializer(serializers.HyperlinkedModelSerializer):
+    tags = serializers.StringRelatedField(many=True)
+    comments = CommentSerializer(many=True)
+
+    class Meta:
+        model = Discuss
+        fields = ['id', 'title', 'starter',
+                  'text', 'isshow', 'time', 'tags', 'comments']
+
+
 class ChatMessageSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = ChatMessage

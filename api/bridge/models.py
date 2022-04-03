@@ -11,12 +11,44 @@ class Notify(models.Model):
     time = models.DateTimeField(auto_now_add=True)
 
 
-# class Chat(models.Model):
-#     from_who = models.CharField(max_length=100)
-#     to_who = models.CharField(max_length=100)
+class Dynamic(models.Model):
+    time = models.DateTimeField(auto_now_add=True)
+    username = models.CharField(max_length=100)
+    discuss = models.CharField(max_length=100)
+    comment = models.IntegerField(null=True)
 
-#     class Meta:
-#         unique_together = (("from_who", "to_who"))
+
+class Discuss(models.Model):
+    text = models.TextField()
+    time = models.DateTimeField(auto_now_add=True)
+    starter = models.CharField(max_length=100)
+    isshow = models.BooleanField(default=1)
+    title = models.CharField(max_length=100, unique=True)
+
+
+class Comment(models.Model):
+    text = models.TextField()
+    time = models.DateTimeField(auto_now_add=True)
+    commenter = models.CharField(max_length=100)
+    discuss = models.ForeignKey(
+        Discuss, on_delete=models.CASCADE, related_name='comments')
+    notshow = models.BooleanField(default=0)
+    replyto = models.ForeignKey(
+        'self', null=True, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return '%s' % (self.commenter)
+
+
+class DiscussTag(models.Model):
+    discuss = models.ForeignKey(
+        Discuss, on_delete=models.CASCADE, related_name='tags')
+    tag = models.CharField(max_length=100)
+
+    def __str__(self):
+        return '%s' % (self.tag)
+
+
 class ChatMessage(models.Model):
     text = models.TextField()
     time = models.DateTimeField(auto_now_add=True)

@@ -93,6 +93,67 @@ class NotifyViewSet(viewsets.ModelViewSet):
     lookup_field = 'username'
 
 
+class DynamicViewSet(generics.GenericAPIView):
+    queryset = Dynamic.objects.all()
+    serializer_class = DynamicSerializer
+    permission_classes = [AllowAny]
+
+    def get(self, request, username, format=None):
+        return Response({"data": self.queryset.filter(username=username).values()}, status=status.HTTP_200_OK)
+
+
+class CommentViewSet(viewsets.ModelViewSet):
+    queryset = Comment.objects.all()
+    serializer_class = CommentSerializer
+    permission_classes = [AllowAny]
+
+    def create(self, request, *args, **kwargs):
+        self.serializer_class = CommentSerializerAlter
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        headers = self.get_success_headers(serializer.data)
+        self.serializer_class = CommentSerializer
+        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+
+
+class DiscussViewSet(viewsets.ModelViewSet):
+    queryset = Discuss.objects.all()
+    serializer_class = DiscussSerializer
+    permission_classes = [AllowAny]
+
+    def get_queryset(self):
+        return Discuss.objects.filter(isshow=True)
+
+    def create(self, request, *args, **kwargs):
+        request1 = request.data.dict()
+        _mutable = request.data._mutable
+        # set to mutable
+        request.data._mutable = True
+        # сhange the values you want
+        request.data['isshow'] = True
+        # print(request.data)
+        # set mutable flag back
+        request.data._mutable = _mutable
+        tags = []
+        for key, val in request1.items():
+            if(key[0:4] == 'tags'):
+                tags.append(val)
+
+        res = super().create(request, *args, **kwargs)
+        payload = {"title": res.data['title'], "tag": "",
+                   "username": res.data['starter'], "time": timezone.now(), "id": res.data['id']}
+        with connection.cursor() as cursor:
+            cursor.execute(
+                "INSERT INTO bridge_dynamic SET discuss = %(title)s,username = %(username)s,time=%(time)s;", payload)
+        for i in tags:
+            payload['tag'] = i
+            with connection.cursor() as cursor:
+                cursor.execute(
+                    "INSERT INTO bridge_discusstag SET tag = %(tag)s,discuss_id = %(id)s;", payload)
+        return res
+
+
 class UserInfoViewSet(viewsets.ModelViewSet):
     queryset = UserInfo.objects.all()
     serializer_class = UserInfoSerializer
