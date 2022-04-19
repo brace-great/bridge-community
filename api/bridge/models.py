@@ -4,11 +4,23 @@ from django.db import models
 import django.utils.timezone as timezone
 
 
+class Report(models.Model):
+    username = models.CharField(max_length=100)
+    reporter = models.CharField(max_length=100)
+    content_type = models.CharField(max_length=100)
+    content_id = models.IntegerField()
+    content_text = models.TextField()
+    reason = models.TextField()
+    time = models.DateTimeField(auto_now_add=True)
+
+
 class Notify(models.Model):
     username = models.CharField(max_length=100)
-    text = models.TextField()
+    from_who = models.CharField(max_length=100)
+    event_type = models.IntegerField()
     isread = models.BooleanField(default=False)
     time = models.DateTimeField(auto_now_add=True)
+    discuss_title = models.CharField(max_length=100, default='')
 
 
 class Dynamic(models.Model):
@@ -47,6 +59,18 @@ class DiscussTag(models.Model):
 
     def __str__(self):
         return '%s' % (self.tag)
+
+
+class DiscussWithTag(models.Model):
+    tag = models.CharField(max_length=100)
+    text = models.TextField()
+    time = models.DateTimeField(auto_now_add=True)
+    starter = models.CharField(max_length=100)
+    isshow = models.BooleanField(default=1)
+    title = models.CharField(max_length=100, unique=True)
+
+    class Meta:
+        db_table = 'discuss_with_tag'
 
 
 class ChatMessage(models.Model):

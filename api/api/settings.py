@@ -112,17 +112,28 @@ WSGI_APPLICATION = 'api.wsgi.application'
 # https://docs.djangoproject.com/en/4.0/ref/settings/#databases
 
 
+# DATABASES = {
+#     "default": {
+#         "ENGINE": os.getenv("ENGINE"),
+#         'NAME': os.getenv("NAME"),
+#         'USER': os.getenv("USER"),
+#         'PASSWORD': os.getenv("PASSWORD"),
+#         'HOST': os.getenv("HOST"),
+#         'PORT': os.getenv("PORT"),
+#     }
+# }
+
 DATABASES = {
     "default": {
-        "ENGINE": os.getenv("ENGINE"),
-        'NAME': os.getenv("NAME"),
-        'USER': os.getenv("USER"),
-        'PASSWORD': os.getenv("PASSWORD"),
-        'HOST': os.getenv("HOST"),
-        'PORT': os.getenv("PORT"),
+        "ENGINE": "django.db.backends.mysql",
+        # "NAME": BASE_DIR / "db.sqlite3",
+        'NAME': 'bridge',
+        'USER': 'marisa',
+        'PASSWORD': 'P-AWl~<1xJ|K8rL#',
+        'HOST': 'patchouli.mysql.database.azure.com',
+        'PORT': '3306',
     }
 }
-
 
 # Password validation
 # https://docs.djangoproject.com/en/4.0/ref/settings/#auth-password-validators
