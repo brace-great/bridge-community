@@ -1,11 +1,30 @@
 import { LocalStorage, SessionStorage } from "quasar";
 import { useStore } from "stores/bridge";
+import { getUtils, putUtils } from "boot/utils";
 
 const routes = [
   {
     path: "/",
     component: () => import("layouts/MainLayout.vue"),
-    children: [{ path: "", component: () => import("pages/IndexPage.vue") }],
+    children: [
+      { path: "", component: () => import("pages/IndexPage.vue") },
+      {
+        path: "search/:keyword",
+        component: () => import("pages/SearchPage.vue"),
+      },
+      {
+        path: "reporthandling",
+        component: () => import("pages/ReportHandling.vue"),
+        beforeEnter: (to, from, next) => {
+          if (useStore().user.is_superuser) {
+            next();
+          } else {
+            alert("非管理员用户");
+            next("/");
+          }
+        },
+      },
+    ],
   },
   {
     path: "/auth",
@@ -50,6 +69,15 @@ const routes = [
       {
         path: ":username/notify",
         component: () => import("pages/UserNotify.vue"),
+        beforeEnter: (to, from, next) => {
+          putUtils(
+            process.env.API + "wu/notify/",
+            { username: useStore().user.username },
+            true
+          ).then((res) => {
+            next();
+          });
+        },
       },
       {
         path: ":username/chat",

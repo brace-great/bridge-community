@@ -8,16 +8,17 @@ let getUtils;
 let postUtils;
 let putUtils;
 let patchUtils;
+let deleteUtils;
 let refreshToken;
 export default boot(({ redirect }) => {
   authValid = async (data, raw) => {
-    if (!(data instanceof Error)) return data;
-    // console.log("data", data.request);
+    if (data && !(data instanceof Error)) {
+      return data;
+    }
 
-    if (data.response.status === 401) {
+    if (data.response.status === 401 || !data) {
       const res = await refreshToken();
-
-      if (!res) {
+      if (!res || res.response.status === 401) {
         alert("登陆已过期");
         LocalStorage.remove("access");
         LocalStorage.remove("refresh");
@@ -35,6 +36,7 @@ export default boot(({ redirect }) => {
       const res = await get(url, restricted, data);
       return authValid(res);
     }
+
     const res = await get(url, restricted);
     return authValid(res);
   };
@@ -53,7 +55,7 @@ export default boot(({ redirect }) => {
       // params: data.data,
       headers: { Authorization: "JWT " + access },
     });
-    return authValid(res);
+    return authValid(res, data);
   };
   patchUtils = async (url, data) => {
     let access = LocalStorage.getItem("access");
@@ -63,8 +65,17 @@ export default boot(({ redirect }) => {
     });
     return authValid(res);
   };
+  deleteUtils = async (url) => {
+    let access = LocalStorage.getItem("access");
+    const res = await axios.delete(url, {
+      // params: data.data,
+      headers: { Authorization: "JWT " + access },
+    });
+    return authValid(res);
+  };
   refreshToken = async () => {
     let refresh = LocalStorage.getItem("refresh");
+
     let refreshRes = await post(
       process.env.API + "auth/jwt/refresh/",
       { refresh: refresh },
@@ -78,4 +89,4 @@ export default boot(({ redirect }) => {
   };
 });
 
-export { getUtils, postUtils, putUtils, patchUtils, refreshToken };
+export { getUtils, postUtils, putUtils, patchUtils, deleteUtils, refreshToken };

@@ -29,21 +29,7 @@ const get = async (url, restricted = false, data) => {
         return res;
       }
     } catch (err) {
-      if (err.response.status !== 401) {
-        return err.response;
-      }
-      try {
-        const res = await refreshToken();
-        if (!res) {
-          alert("登陆已过期");
-          LocalStorage.remove("access");
-          LocalStorage.remove("refresh");
-          useRouter().push("/auth");
-          return null;
-        }
-      } catch (err) {
-        return null;
-      }
+      return err;
     }
   }
   if (restricted == false) {

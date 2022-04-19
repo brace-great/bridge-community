@@ -80,7 +80,7 @@ import {
   onActivated,
   onUpdated,
 } from "vue";
-import { getUtils as get, patchUtils, putUtils, postUtils } from "boot/utils";
+import { getUtils, patchUtils, putUtils, postUtils } from "boot/utils";
 import { useStore } from "stores/bridge";
 import { useRouter } from "vue-router";
 
@@ -95,11 +95,13 @@ export default defineComponent({
     const username = store.user.username;
     const myAvatar = ref();
     const text = ref("");
-    get(process.env.API + "wu/userinfos/" + username, false).then((res) => {
-      myAvatar.value = res.data.avatar;
-    });
+    getUtils(process.env.API + "wu/userinfos/" + username, false).then(
+      (res) => {
+        myAvatar.value = res.data.avatar;
+      }
+    );
     for (const i in store.chat) {
-      get(process.env.API + "wu/userinfos/" + i, false).then((res) => {
+      getUtils(process.env.API + "wu/userinfos/" + i, false).then((res) => {
         store.avatar[i] = res.data.avatar;
       });
     }

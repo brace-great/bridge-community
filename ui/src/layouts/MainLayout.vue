@@ -19,25 +19,27 @@
             :to="'/user/' + store.user.username + '/newdiscuss'"
             style="margin-left: 50px"
           />
-          <q-input
-            style="margin: auto"
-            dark
-            dense
-            standout
-            v-model="text"
-            input-class="text-right"
-            class="q-ml-md"
-          >
-            <template v-slot:append>
-              <q-icon v-if="text === ''" name="search" />
-              <q-icon
-                v-else
-                name="clear"
-                class="cursor-pointer"
-                @click="text = ''"
-              />
-            </template>
-          </q-input>
+          <div class="row" style="margin: auto">
+            <q-input
+              dark
+              dense
+              standout
+              v-model="text"
+              input-class="text-right"
+              class="q-ml-md"
+            >
+              <template v-slot:append>
+                <q-icon v-if="text === ''" name="search" />
+                <q-icon
+                  v-else
+                  name="clear"
+                  class="cursor-pointer"
+                  @click="text = ''"
+                />
+              </template>
+            </q-input>
+            <q-btn :to="'/search/' + text" label="搜索" flat />
+          </div>
         </q-toolbar-title>
         <q-btn
           v-if="access"
@@ -84,11 +86,11 @@
 </template>
 
 <script>
-import { defineComponent, ref, reactive } from "vue";
+import { defineComponent, onBeforeMount, ref, reactive } from "vue";
 import EssentialLink from "components/EssentialLink.vue";
 import { useRouter, useRoute } from "vue-router";
 import { LocalStorage, SessionStorage } from "quasar";
-import { getUtils as get } from "boot/utils";
+import { getUtils } from "boot/utils";
 import { useStore } from "stores/bridge";
 
 export default defineComponent({
@@ -105,13 +107,30 @@ export default defineComponent({
     const user = useStore().user;
 
     const chatBadge = ref(null);
+    const notifyBadge = ref(null);
     const store = useStore();
     const linkusername = ref("");
+    onBeforeMount(async () => {
+      if (access.value) {
+        const res = await getUtils(process.env.API + "wu/notify/", true);
+        store.setNotify(res.data.results.reverse());
+        notifyBadge.value = 0;
+        for (const i in store.notify) {
+          if (store.notify[i].isread == 0) {
+            notifyBadge.value += 1;
+          }
+        }
+        if (notifyBadge.value == 0) {
+          notifyBadge.value = null;
+        }
+      }
+    });
+
     if (user) {
       linkusername.value = user.username;
     }
     if (access.value) {
-      get(process.env.API + "wu/chatmessage/", true).then((res) => {
+      getUtils(process.env.API + "wu/chatmessage/", true).then((res) => {
         let chat = res.data.results;
         for (const i in chat) {
           if (chat[i].receiver != user.username) {
@@ -155,9 +174,8 @@ export default defineComponent({
       router.push({
         path: "/auth/",
       });
-      window.location.reload();
     };
-    const linksList = [
+    let linksList = [
       {
         title: "主页",
         link: "/",
@@ -165,7 +183,7 @@ export default defineComponent({
       {
         title: "通知",
         link: "/user/" + linkusername.value + "/notify/",
-        badge: ref(1),
+        badge: notifyBadge,
       },
       {
         title: "私信",
@@ -181,12 +199,16 @@ export default defineComponent({
         link: "/user/" + linkusername.value + "/settings/",
       },
     ];
+    if (store.user.is_superuser) {
+      linksList.push({ title: "管理员后台", link: "/reporthandling/" });
+    }
     const bar = ref(null);
 
     // we manually trigger it (this is not needed if we
     // don't skip Ajax calls hijacking)
 
     return {
+      notifyBadge,
       width: ref(200),
       store,
       bar,

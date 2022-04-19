@@ -97,18 +97,21 @@ export default defineComponent({
       LocalStorage.set("access", res.data.access);
       LocalStorage.set("refresh", res.data.refresh);
 
-      res = await getUtils(process.env.API + "auth/users/me/", true);
+      res = await getUtils(
+        process.env.API + "wu/users/" + regForm.account + "/",
+        true
+      );
       const store = useStore();
       store.setUser({
         id: res.data.id,
         username: res.data.username,
         email: res.data.email,
+        is_superuser: res.data.is_superuser,
       });
 
       res = await getUtils(process.env.API + "auth/users/me/", true);
 
-      router.go(-1);
-      // window.location.reload();
+      location.href = "http://localhost:8080/";
     };
     const register = async () => {
       let res = await post(process.env.API + "auth/users/", {
