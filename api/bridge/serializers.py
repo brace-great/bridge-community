@@ -4,6 +4,20 @@ from django.contrib.auth.hashers import make_password
 from .models import *
 
 
+class ReportSerializer(serializers.HyperlinkedModelSerializer):
+    class Meta:
+        model = Report
+        fields = ['id',
+                  'username',
+                  'content_type',
+                  'content_id',
+                  'content_text',
+                  'time',
+                  'reason',
+                  'reporter'
+                  ]
+
+
 class DynamicSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = Dynamic
@@ -31,9 +45,28 @@ class CommentSerializer(serializers.ModelSerializer):
                   'replyto', 'discuss', 'text', 'commenter', 'time']
 
 
+class DiscussWithTagSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = DiscussWithTag
+        fields = ['id',
+                  'tag',
+                  'text',
+                  'time',
+                  'starter',
+                  'isshow',
+                  'title',
+                  ]
+
+
 class DiscussSerializer(serializers.HyperlinkedModelSerializer):
     tags = serializers.StringRelatedField(many=True)
-    comments = CommentSerializer(many=True)
+    comments = serializers.SerializerMethodField()
+
+    def get_comments(self, obj):
+        qs = Comment.objects.filter(notshow=False, discuss=obj)
+        serializer = CommentSerializer(instance=qs, many=True)
+        return serializer.data
 
     class Meta:
         model = Discuss
@@ -51,7 +84,8 @@ class ChatMessageSerializer(serializers.HyperlinkedModelSerializer):
 class NotifySerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = Notify
-        fields = ['username', 'isread', 'text', 'time']
+        fields = ['username', 'isread', 'from_who',
+                  'time', 'event_type', 'discuss_title']
 
 
 class UserInfoSerializer(serializers.HyperlinkedModelSerializer):
@@ -74,7 +108,7 @@ class UserSerializer(serializers.HyperlinkedModelSerializer):
 
     class Meta:
         model = User
-        fields = ['url', 'id', 'username', 'password', 'email']
+        fields = ['url', 'id', 'username', 'password', 'email', 'is_superuser']
         # lookup_field = 'username'
         extra_kwargs = {
 

@@ -24,12 +24,49 @@ import django.utils.timezone as timezone
 #     })
 
 
+# class DiscussWithTagView(viewsets.ModelViewSet):
+#     queryset = DiscussWithTag.objects.all()
+#     serializer_class = DiscussWithTagSerializer
+#     permission_classes = [AllowAny]
+
+#     def get_queryset(self):
+#         """
+#         This view should return a list of all the purchases
+#         for the currently authenticated user.
+#         """
+#         keyword = self.request.data.keyword
+#         return DiscussWithTag.objects.filter(tag=keyword) | DiscussWithTag.objects.filter(title_contains=keyword)
+class DiscussWithTagView(generics.GenericAPIView):
+
+    def put(self, request, *args, **kwargs):
+
+        if(len(request.data) == 1):
+            payload = {
+                'keyword': request.data['keyword'],
+                'keyword2': '%'+request.data['keyword']+'%'
+
+            }
+            with connection.cursor() as cursor:
+                rs = DiscussWithTag.objects.raw(
+                    "select * from bridge_discusstag WHERE tag = %(keyword)s OR title like %(keyword2)s;", payload)
+                # rs = DiscussWithTag.objects.raw(
+                #     "select * from discuss_with_tag WHERE tag = %(keyword)s OR title like %(keyword2)s;", payload)
+                serializer = DiscussWithTagSerializer(rs, many=True)
+                rs = Comment.objects.raw(
+                    "select * from bridge_comment WHERE discuss_id in (select id from discuss_with_tag WHERE tag = %(keyword)s OR title like %(keyword2)s);", payload)
+                serializer2 = CommentSerializer(rs, many=True)
+                return Response({'discuss': serializer.data, 'comments': serializer2.data})
+
+        return super().put(request, *args, **kwargs)
+
+
 class ChangeEmail(generics.GenericAPIView):
 
     def post(self, request, *args, **kwargs):
         payload = {'email': request.data['email'],
                    'username': request.data['username']}
         with connection.cursor() as cursor:
+
             cursor.execute(
                 "UPDATE auth_user SET is_active = 0,email = %(email)s WHERE username = %(username)s;", payload)
 
@@ -89,8 +126,47 @@ class ChatMessageViewSet(viewsets.ModelViewSet):
 class NotifyViewSet(viewsets.ModelViewSet):
     queryset = Notify.objects.all()
     serializer_class = NotifySerializer
-    permission_classes = [IsOwnerNotPatchOrPostOnly]
+    permission_classes = [AllowAny]
     lookup_field = 'username'
+
+    def get_queryset(self):
+        """
+        This view should return a list of all the purchases
+        for the currently authenticated user.
+        """
+        user = self.request.user
+        return Notify.objects.filter(username=user)
+
+    def put(self, request, *args, **kwargs):
+
+        if(len(request.data) == 1 and request.data['username'] == request.user.username):
+            payload = {
+                'username': request.user.username,
+            }
+            with connection.cursor() as cursor:
+                cursor.execute(
+                    "UPDATE bridge_notify SET isread = 1 WHERE username = %(username)s;", payload)
+                return HttpResponse(status=status.HTTP_200_OK)
+        if(request.user.username != request.data['username']):
+            return HttpResponse(status=status.HTTP_403_FORBIDDEN)
+
+        return super().put(request, *args, **kwargs)
+
+
+class ReportViewSet(viewsets.ModelViewSet):
+    queryset = Report.objects.all()
+    serializer_class = ReportSerializer
+    permission_classes = [AllowAny]
+
+    def destroy(self, request, *args, **kwargs):
+        # print(request)
+        # payload = {"content_id": request.data['title']}
+        # with connection.cursor() as cursor:
+        #     rs = Discuss.objects.raw(
+        #         "select * from bridge_discuss WHERE content_id = %(content_id)s;", payload)
+        # print(rs)
+        # return Response(status=status.HTTP_200_OK)
+        return super().destroy(request, *args, **kwargs)
 
 
 class DynamicViewSet(generics.GenericAPIView):
@@ -107,6 +183,9 @@ class CommentViewSet(viewsets.ModelViewSet):
     serializer_class = CommentSerializer
     permission_classes = [AllowAny]
 
+    def get_queryset(self):
+        return Comment.objects.filter(notshow=False)
+
     def create(self, request, *args, **kwargs):
         self.serializer_class = CommentSerializerAlter
         serializer = self.get_serializer(data=request.data)
@@ -114,6 +193,33 @@ class CommentViewSet(viewsets.ModelViewSet):
         self.perform_create(serializer)
         headers = self.get_success_headers(serializer.data)
         self.serializer_class = CommentSerializer
+        res = Discuss.objects.raw(
+            'SELECT * FROM bridge_discuss WHERE id = %(discuss)s', serializer.data)
+        payload = {
+            'username': serializer.data['commenter'], 'time': timezone.now(), 'title': res[0].title, 'comment': serializer.data['id']}
+        with connection.cursor() as cursor:
+            cursor.execute(
+                "INSERT INTO bridge_dynamic SET discuss = %(title)s,username = %(username)s,time=%(time)s,comment=%(comment)s;", payload)
+        if(serializer.data['replyto'] == None):
+            res = Discuss.objects.raw(
+                'SELECT * FROM bridge_discuss WHERE id = %(discuss)s', serializer.data)
+            payload = {
+                'from_who': serializer.data['commenter'], 'time': timezone.now(), 'username': res[0].starter, 'discuss_title': res[0].title}
+            if(payload['from_who'] != payload['username']):
+                with connection.cursor() as cursor:
+                    cursor.execute(
+                        "INSERT INTO bridge_notify SET discuss_title=%(discuss_title)s, from_who = %(from_who)s,username = %(username)s,time=%(time)s,event_type=1,isread=0;", payload)
+        else:
+            res = Comment.objects.raw(
+                'SELECT * FROM bridge_comment WHERE id = %(replyto)s', serializer.data)
+            res2 = Discuss.objects.raw(
+                'SELECT * FROM bridge_discuss WHERE id = %(discuss)s', serializer.data)
+            payload = {
+                'from_who': serializer.data['commenter'], 'time': timezone.now(), 'username': res[0].commenter, 'discuss_title': res2[0].title}
+            if(payload['from_who'] != payload['username']):
+                with connection.cursor() as cursor:
+                    cursor.execute(
+                        "INSERT INTO bridge_notify SET discuss_title=%(discuss_title)s, from_who = %(from_who)s,username = %(username)s,time=%(time)s,event_type=2,isread=0;", payload)
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
 

@@ -16,7 +16,7 @@ router.register(r'chatmessage', views.ChatMessageViewSet)
 router.register(r'notify', views.NotifyViewSet)
 router.register(r'comment', views.CommentViewSet)
 router.register(r'discuss', views.DiscussViewSet)
-# router.register(r'dynamic', views.DynamicViewSet)
+router.register(r'report', views.ReportViewSet)
 
 
 sub_patterns = [
@@ -27,6 +27,7 @@ sub_patterns = [
     path('wu/dynamic/<username>/', views.DynamicViewSet.as_view()),
     path('wu/activate/<uid>/<token>/', views.ActivateUser.as_view()),
     path('wu/changeemail/', views.ChangeEmail.as_view()),
+    path('wu/discusswithtag/', views.DiscussWithTagView.as_view()),
     path('wu/', include(router.urls)),
     path('api-auth/', include('rest_framework.urls', namespace='rest_framework')),
     re_path(r'^auth/', include('djoser.urls')),
