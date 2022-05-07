@@ -25,7 +25,11 @@
                 </div>
               </div>
             </q-item-label>
-            <q-item-label caption :lines="lines[index]">
+            <q-item-label
+              style="white-space: pre-wrap"
+              caption
+              :lines="lines[index]"
+            >
               {{ i.text }}
             </q-item-label>
           </q-item-section>
@@ -75,7 +79,7 @@
               color="primary"
               style="margin-top: auto"
               @click="reclaim(index)"
-              v-show="lines[index] != 2"
+              v-show="lines[index] != 2 && i.text.length > 1000"
             />
           </q-item-section>
         </q-item>
@@ -240,6 +244,7 @@ export default defineComponent({
       const res = await getUtils(process.env.API + "wu/discuss/");
       discuss.value = res.data.results.reverse();
       for (const i in discuss.value) {
+        discuss.value[i].text = discuss.value[i].text.replace(/<br>/g, "\n");
         comments.value[i] = discuss.value[i].comments;
         if (comments.value[i].length == 0) {
           comments.value[i] = null;

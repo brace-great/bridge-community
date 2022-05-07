@@ -72,6 +72,7 @@ import { defineComponent, ref, reactive, onBeforeMount } from "vue";
 import { getUtils, postUtils } from "boot/utils";
 import { useStore } from "stores/bridge";
 import { useRoute, useRouter } from "vue-router";
+import { useQuasar } from "quasar";
 
 export default defineComponent({
   name: "UserData",
@@ -87,6 +88,7 @@ export default defineComponent({
     const router = useRouter();
     const dynamics = ref();
     const rightdowntext = ref();
+    const $q = useQuasar();
     username.value = route.params.username;
     getUtils(process.env.API + "wu/userinfos/" + username.value, false).then(
       (res) => {
@@ -127,15 +129,18 @@ export default defineComponent({
             isread_receiver: 0,
             isshow_sender: 1,
           };
-          postUtils(process.env.API + "wu/chatmessage/", postData, true).then(
-            (res) => {
-              $q.notify({
-                color: "positive",
-                textColor: "white",
-                message: "已发送",
-              });
-            }
+          let res = await postUtils(
+            process.env.API + "wu/chatmessage/",
+            postData,
+            true
           );
+          if (res) {
+            $q.notify({
+              color: "positive",
+              textColor: "white",
+              message: "已发送",
+            });
+          }
         }
       },
     };

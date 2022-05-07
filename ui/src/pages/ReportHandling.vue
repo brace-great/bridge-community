@@ -49,13 +49,13 @@
             @click="reclaim(index)"
             v-show="lines[index] != 3"
           />
-          <q-btn
+          <!-- <q-btn
             label="收回"
             color="primary"
             style="margin-top: auto"
             @click="reclaim(index)"
             v-show="lines[index] != 3"
-          />
+          /> -->
         </q-item-section>
       </q-item>
 

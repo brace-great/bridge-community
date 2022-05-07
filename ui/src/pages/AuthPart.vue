@@ -111,7 +111,7 @@ export default defineComponent({
 
       res = await getUtils(process.env.API + "auth/users/me/", true);
 
-      location.href = "http://localhost:8080/";
+      location.href = process.env.HOST;
     };
     const register = async () => {
       let res = await post(process.env.API + "auth/users/", {
