@@ -48,9 +48,7 @@ class DiscussWithTagView(generics.GenericAPIView):
             }
             with connection.cursor() as cursor:
                 rs = DiscussWithTag.objects.raw(
-                    "select * from bridge_discusstag WHERE tag = %(keyword)s OR title like %(keyword2)s;", payload)
-                # rs = DiscussWithTag.objects.raw(
-                #     "select * from discuss_with_tag WHERE tag = %(keyword)s OR title like %(keyword2)s;", payload)
+                    "select * from discuss_with_tag WHERE tag = %(keyword)s OR title like %(keyword2)s;", payload)
                 serializer = DiscussWithTagSerializer(rs, many=True)
                 rs = Comment.objects.raw(
                     "select * from bridge_comment WHERE discuss_id in (select id from discuss_with_tag WHERE tag = %(keyword)s OR title like %(keyword2)s);", payload)

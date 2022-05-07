@@ -24,11 +24,10 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/4.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.getenv("SECRET_KEY")
-
-# SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 CORS_ALLOW_ALL_ORIGINS = True
+
+SECRET_KEY = os.getenv("SECRET_KEY")
 ALLOWED_HOSTS = ['106.13.21.137', 'localhost', '127.0.0.1']
 EMAIL_HOST = os.getenv("EMAIL_HOST")
 EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER")
@@ -48,9 +47,7 @@ SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(minutes=15),
     'REFRESH_TOKEN_LIFETIME': timedelta(minutes=150),
     'ROTATE_REFRESH_TOKENS': True,
-
     'AUTH_HEADER_TYPES': ('JWT',),
-
 }
 # Application definition
 REST_FRAMEWORK = {
@@ -58,7 +55,6 @@ REST_FRAMEWORK = {
     'PAGE_SIZE': 10,
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework_simplejwt.authentication.JWTAuthentication']
-
 }
 
 INSTALLED_APPS = [
@@ -114,12 +110,13 @@ WSGI_APPLICATION = 'api.wsgi.application'
 
 DATABASES = {
     "default": {
-        "ENGINE": os.getenv("ENGINE"),
-        'NAME': os.getenv("NAME"),
-        'USER': os.getenv("USER"),
-        'PASSWORD': os.getenv("PASSWORD"),
-        'HOST': os.getenv("HOST"),
-        'PORT': os.getenv("PORT"),
+        "ENGINE": "django.db.backends.mysql",
+        # "NAME": BASE_DIR / "db.sqlite3",
+        'NAME': 'bridge',
+        'USER': 'marisa',
+        'PASSWORD': 'P-AWl~<1xJ|K8rL#',
+        'HOST': 'patchouli.mysql.database.azure.com',
+        'PORT': '3306',
     }
 }
 
